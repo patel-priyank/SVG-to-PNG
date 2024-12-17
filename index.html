@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SVG to PNG Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      function SVGToPNGConverter() {
+        const [svgCode, setSvgCode] = React.useState('');
+        const [width, setWidth] = React.useState(512);
+        const [height, setHeight] = React.useState(512);
+        const [pngDataUrl, setPngDataUrl] = React.useState(null);
+        const [errorMessage, setErrorMessage] = React.useState('');
+
+        const convertSVGToPNG = () => {
+          // Reset previous state
+          setPngDataUrl(null);
+          setErrorMessage('');
+
+          try {
+            // Validate SVG code is not empty
+            if (!svgCode.trim()) {
+              setErrorMessage('Please enter SVG code');
+              return;
+            }
+
+            const svg = new Blob([svgCode], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(svg);
+
+            const img = new Image();
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              setErrorMessage('Invalid SVG: Unable to load image');
+            };
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                // Scale and center the SVG
+                const scale = Math.min(width / img.width, height / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+                const x = (width - scaledWidth) / 2;
+                const y = (height - scaledHeight) / 2;
+
+                ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                const pngDataUrl = canvas.toDataURL('image/png');
+                setPngDataUrl(pngDataUrl);
+
+                URL.revokeObjectURL(url);
+              } catch (drawError) {
+                setErrorMessage('Error converting SVG: ' + drawError.message);
+              }
+            };
+            img.src = url;
+          } catch (error) {
+            setErrorMessage('Conversion error: ' + error.message);
+          }
+        };
+
+        const downloadPNG = () => {
+          if (pngDataUrl) {
+            const link = document.createElement('a');
+            link.download = 'converted-image.png';
+            link.href = pngDataUrl;
+            link.click();
+          }
+        };
+
+        return (
+          <div>
+            <div className="section">
+              <h2>SVG code</h2>
+              <textarea
+                value={svgCode}
+                onChange={e => setSvgCode(e.target.value)}
+                placeholder="Paste your SVG code here..."
+              />
+              <button onClick={convertSVGToPNG}>Convert to PNG</button>
+              {pngDataUrl && (
+                <button className="ml-8" onClick={downloadPNG}>
+                  Download PNG
+                </button>
+              )}
+            </div>
+
+            <div className="section">
+              <h2>Image size in px (height/width)</h2>
+              <div className="size-inputs">
+                <input
+                  type="number"
+                  value={height}
+                  onChange={e => setHeight(Number(e.target.value))}
+                  placeholder="Height"
+                />
+                <input
+                  type="number"
+                  value={width}
+                  onChange={e => setWidth(Number(e.target.value))}
+                  placeholder="Width"
+                />
+              </div>
+            </div>
+
+            <div className="section">
+              <h2>Preview</h2>
+              {errorMessage ? (
+                <div className="error-message">{errorMessage}</div>
+              ) : pngDataUrl ? (
+                <img id="preview-image" src={pngDataUrl} alt="Converted PNG" />
+              ) : (
+                <p>Converted image will appear here</p>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<SVGToPNGConverter />, document.getElementById('root'));
+    </script>
+  </body>
+</html>
