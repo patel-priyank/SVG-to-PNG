@@ -3,6 +3,7 @@
 * {
   font-family: 'Ubuntu', sans-serif;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 textarea,
@@ -15,7 +16,7 @@ input {
   width: 100%;
 
   body.dark & {
-    background-color: #3a3a3a;
+    background-color: #2a2a2a;
     color: #e0e0e0;
     border-color: #4a4a4a;
   }
@@ -91,8 +92,7 @@ h2 {
   background-color: #b0b0b0;
   color: #ffffff;
   border: none;
-  padding: 0.5rem;
-  font-size: 1.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 4px;
 
   body.dark & {
